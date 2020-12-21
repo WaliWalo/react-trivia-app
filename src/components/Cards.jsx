@@ -30,10 +30,12 @@ export default class Cards extends Component {
   }
 
   componentDidMount() {
-    const answers = this.state.incorrect_answers;
-    answers.push(this.state.correct_answer);
-    this.shuffleArray(answers);
-    this.setState({ answers: answers });
+    if (this.state.incorrect_answers !== undefined) {
+      const answers = this.state.incorrect_answers;
+      answers.push(this.state.correct_answer);
+      this.shuffleArray(answers);
+      this.setState({ answers: answers });
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -53,37 +55,40 @@ export default class Cards extends Component {
   render() {
     return (
       <div>
-        <Card>
-          <Card.Header>
-            <Accordion.Toggle
-              as={Button}
-              eventKey={this.props.eventKey}
-              style={{ width: "100%" }}
-            >
-              <h3>
-                {this.props.question.question.replace(
-                  /&#?\w+;/g,
-                  (match) => entities[match]
-                )}
-              </h3>
-              <div>
-                {this.state.answers.map((answer, index) => {
-                  return (
-                    <p key={index}>
-                      {index
-                        .toString()
-                        .replace(/^[0-9]+$/g, (match) => options[match])}
-                      : {answer.replace(/&#?\w+;/g, (match) => entities[match])}
-                    </p>
-                  );
-                })}
-              </div>
-            </Accordion.Toggle>
-          </Card.Header>
-          <Accordion.Collapse eventKey={this.props.eventKey}>
-            <Card.Body>{this.state.correct_answer}</Card.Body>
-          </Accordion.Collapse>
-        </Card>
+        {this.props.question.question !== undefined && (
+          <Card>
+            <Card.Header>
+              <Accordion.Toggle
+                as={Button}
+                eventKey={this.props.eventKey}
+                style={{ width: "100%" }}
+              >
+                <h3>
+                  {this.props.question.question.replace(
+                    /&#?\w+;/g,
+                    (match) => entities[match]
+                  )}
+                </h3>
+                <div>
+                  {this.state.answers.map((answer, index) => {
+                    return (
+                      <p key={index}>
+                        {index
+                          .toString()
+                          .replace(/^[0-9]+$/g, (match) => options[match])}
+                        :{" "}
+                        {answer.replace(/&#?\w+;/g, (match) => entities[match])}
+                      </p>
+                    );
+                  })}
+                </div>
+              </Accordion.Toggle>
+            </Card.Header>
+            <Accordion.Collapse eventKey={this.props.eventKey}>
+              <Card.Body>{this.state.correct_answer}</Card.Body>
+            </Accordion.Collapse>
+          </Card>
+        )}
       </div>
     );
   }
