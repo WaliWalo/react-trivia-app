@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import axios from "axios";
 import Pusher from "pusher-js";
-import { Accordion, Button, Card, Form, ListGroup } from "react-bootstrap";
+import { Button, Card, Form, ListGroup } from "react-bootstrap";
 import { getQuestions } from "../api/triviaApi";
-import Cards from "./Cards";
 import { withRouter } from "react-router-dom";
 
 const entities = {
@@ -33,6 +32,7 @@ class Home extends Component {
     users: [],
     currentQuestion: {},
     started: false,
+    counter: 0,
   };
 
   componentDidMount() {
@@ -48,6 +48,7 @@ class Home extends Component {
       this.setState({
         questions: data.questions,
         currentQuestion: data.currentQuestion,
+        users: data.users,
       });
     });
     // this.handleTextChange = this.handleTextChange.bind(this);
@@ -96,26 +97,74 @@ class Home extends Component {
   handleStart = () => {
     if (this.state.questions) {
       let questions = [...this.state.questions];
-      let question = { ...questions[0] };
+      let question = { ...questions[this.state.counter] };
       let answers = [...question.incorrect_answers];
       if (
-        this.state.questions[0].incorrect_answers.length + 1 !==
+        this.state.questions[this.state.counter].incorrect_answers.length +
+          1 !==
         answers.length
       ) {
         answers.push(question.correct_answer);
       }
       this.shuffleArray(answers);
       question.answers = answers;
-      this.setState({ currentQuestion: question });
+      let counter = this.state.counter;
+      this.setState({ currentQuestion: question, counter: counter });
       const payload = {
         questions: this.state.questions,
         currentQuestion: question,
+        users: [],
       };
       //console.log(process.env.REACT_APP_BE_URL);
       axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
     } else {
       alert("NO QUESTIONS SELECTED");
     }
+  };
+
+  handleNext = () => {
+    let questions = [...this.state.questions];
+    let question = { ...questions[this.state.counter + 1] };
+    let answers = [...question.incorrect_answers];
+    if (
+      this.state.questions[this.state.counter + 1].incorrect_answers.length +
+        1 !==
+      answers.length
+    ) {
+      answers.push(question.correct_answer);
+    }
+    this.shuffleArray(answers);
+    question.answers = answers;
+    let counter = this.state.counter + 1;
+    this.setState({ currentQuestion: question, counter: counter });
+    const payload = {
+      questions: this.state.questions,
+      currentQuestion: question,
+      users: [],
+    };
+    //console.log(process.env.REACT_APP_BE_URL);
+    axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
+  };
+
+  handleSubmitAnswer = (e) => {
+    console.log(e.target.id);
+    const pusher = new Pusher("8e89aecbbecc93a64a18", {
+      cluster: "eu",
+      encrypted: true,
+    });
+    const channel = pusher.subscribe("chat");
+    channel.bind("answer", (data) => {
+      this.setState({
+        users: data.users,
+      });
+    });
+    let user = { user: this.state.username, answer: e.target.id };
+    let newUsers = this.state.users.push(user);
+    this.setState({ users: newUsers });
+    const payload = {
+      users: newUsers,
+    };
+    axios.post(`${process.env.REACT_APP_BE_URL}/user`, payload);
   };
 
   render() {
@@ -204,7 +253,11 @@ class Home extends Component {
                 <Card.Text>
                   <ListGroup>
                     {this.state.currentQuestion.answers.map((answer, index) => (
-                      <ListGroup.Item key={index}>
+                      <ListGroup.Item
+                        key={index}
+                        id={answer}
+                        onClick={this.handleSubmitAnswer}
+                      >
                         {index
                           .toString()
                           .replace(/^[0-9]+$/g, (match) => options[match])}
@@ -214,7 +267,11 @@ class Home extends Component {
                     ))}
                   </ListGroup>
                 </Card.Text>
-                <Button variant="primary">Next</Button>
+                {this.state.username === "admin" && (
+                  <Button variant="primary" onClick={this.handleNext}>
+                    Next
+                  </Button>
+                )}
               </Card.Body>
             </Card>
           </>
