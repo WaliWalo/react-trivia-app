@@ -39,8 +39,8 @@ class Home extends Component {
   componentDidMount() {
     const username = window.prompt("Username: ", "Anonymous");
     this.setState({ username });
-
-    const pusher = new Pusher(process.env.PUSHER_API_KEY, {
+    console.log(process.env.REACT_APP_PUSHER_API_KEY);
+    const pusher = new Pusher(process.env.REACT_APP_PUSHER_API_KEY, {
       cluster: "eu",
       encrypted: true,
     });
