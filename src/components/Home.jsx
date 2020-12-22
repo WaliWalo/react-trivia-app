@@ -109,26 +109,31 @@ class Home extends Component {
   };
 
   handleNext = () => {
-    let questions = [...this.state.questions];
-    let question = { ...questions[this.state.counter + 1] };
-    let answers = [...question.incorrect_answers];
-    if (
-      this.state.questions[this.state.counter + 1].incorrect_answers.length +
-        1 !==
-      answers.length
-    ) {
-      answers.push(question.correct_answer);
-    }
-    this.shuffleArray(answers);
-    question.answers = answers;
-    let counter = this.state.counter + 1;
-    this.setState({ currentQuestion: question, counter: counter });
-    const payload = {
-      questions: this.state.questions,
-      currentQuestion: question,
-    };
+    if (this.state.counter + 1 > this.state.questions.length) {
+      let counter = this.state.counter + 1;
+      this.setState({ counter: counter });
+    } else {
+      let questions = [...this.state.questions];
+      let question = { ...questions[this.state.counter + 1] };
+      let answers = [...question.incorrect_answers];
+      if (
+        this.state.questions[this.state.counter + 1].incorrect_answers.length +
+          1 !==
+        answers.length
+      ) {
+        answers.push(question.correct_answer);
+      }
+      this.shuffleArray(answers);
+      question.answers = answers;
+      let counter = this.state.counter + 1;
+      this.setState({ currentQuestion: question, counter: counter });
+      const payload = {
+        questions: this.state.questions,
+        currentQuestion: question,
+      };
 
-    axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
+      axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
+    }
   };
 
   handleSubmitAnswer = (e) => {
@@ -320,11 +325,20 @@ class Home extends Component {
                 </Card>
                 <ListGroup style={{ display: this.state.scores }}>
                   <ListGroup.Item>
-                    Correct Answer: {this.state.currentQuestion.correct_answer}
+                    Correct Answer:{" "}
+                    {this.state.currentQuestion.correct_answer.replace(
+                      /&#?\w+;/g,
+                      (match) => entities[match]
+                    )}
                   </ListGroup.Item>
                   {this.state.users.reverse().map((user) => (
                     <ListGroup.Item>
-                      {user.user} answered {user.answer}: {user.score}
+                      {user.user} answered{" "}
+                      {user.answer.replace(
+                        /&#?\w+;/g,
+                        (match) => entities[match]
+                      )}
+                      : {user.score}
                     </ListGroup.Item>
                   ))}
                 </ListGroup>
