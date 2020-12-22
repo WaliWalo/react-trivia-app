@@ -171,6 +171,7 @@ class Home extends Component {
 
   componentDidUpdate = (prevProp, prevState) => {
     if (this.state.currentQuestion !== prevState.currentQuestion) {
+      this.state.users.sort((a, b) => (a.score > b.score ? 1 : -1));
       if (this.state.answered === "none") {
         this.setState({ answered: "block" });
       }
@@ -184,7 +185,9 @@ class Home extends Component {
     return (
       <>
         {this.state.counter + 1 === this.state.questions.length ? (
-          <h2>Quiz Completed</h2>
+          <>
+            <h2>{this.state.questions.length + 1} Quiz Completed</h2>
+          </>
         ) : (
           <div>
             {!this.state.currentQuestion.answers ? (
