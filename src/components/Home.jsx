@@ -40,7 +40,7 @@ class Home extends Component {
     const username = window.prompt("Username: ", "Anonymous");
     this.setState({ username });
 
-    const pusher = new Pusher("8e89aecbbecc93a64a18", {
+    const pusher = new Pusher(process.env.PUSHER_API_KEY, {
       cluster: "eu",
       encrypted: true,
     });
