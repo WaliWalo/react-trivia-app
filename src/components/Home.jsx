@@ -109,7 +109,7 @@ class Home extends Component {
   };
 
   handleNext = () => {
-    if (this.state.counter + 1 > this.state.questions.length) {
+    if (this.state.counter + 1 === this.state.questions.length) {
       let counter = this.state.counter + 1;
       this.setState({ counter: counter });
     } else {
