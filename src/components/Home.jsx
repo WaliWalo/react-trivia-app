@@ -188,7 +188,7 @@ class Home extends Component {
           <>
             <h2>{this.state.questions.length + 1} Quiz Completed</h2>
             <ListGroup>
-              {this.state.users.map((user) => (
+              {this.state.users.reverse().map((user) => (
                 <ListGroup.Item>
                   {user.user}: {user.score}
                 </ListGroup.Item>
