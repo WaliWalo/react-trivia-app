@@ -190,7 +190,8 @@ class Home extends Component {
     return (
       <>
         {this.state.questions[this.state.questions.length - 1].question ===
-        this.state.currentQuestion.question ? (
+          this.state.currentQuestion.question &&
+        this.state.questions.length !== 0 ? (
           <>
             <h2>{this.state.questions.length} Quiz Completed</h2>
             <ListGroup>
