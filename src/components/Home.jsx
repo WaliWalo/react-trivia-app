@@ -9,7 +9,7 @@ const entities = {
   "&#039;": "'",
   "&quot;": '"',
   "&shy;": "",
-  "&rsquo;": "'",
+  "&rsquo;": "",
   // add more if needed
 };
 
@@ -189,8 +189,7 @@ class Home extends Component {
   render() {
     return (
       <>
-        {this.state.questions[this.state.questions.length - 1].question ===
-          this.state.currentQuestion.question &&
+        {this.state.counter + 1 > this.state.questions.length &&
         this.state.questions.length !== 0 ? (
           <>
             <h2>{this.state.questions.length} Quiz Completed</h2>
