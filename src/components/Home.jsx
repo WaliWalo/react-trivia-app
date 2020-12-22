@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import Pusher from "pusher-js";
-import { Button, Card, Form, ListGroup } from "react-bootstrap";
+import { Button, Card, Form, ListGroup, Spinner } from "react-bootstrap";
 import { getQuestions } from "../api/triviaApi";
 import { withRouter } from "react-router-dom";
 
@@ -27,12 +27,13 @@ class Home extends Component {
       difficulty: "easy",
     },
     questions: [],
-    text: "",
     username: "",
     users: [],
     currentQuestion: {},
-    started: false,
+    answered: "block",
+    scores: "none",
     counter: 0,
+    loading: true,
   };
 
   componentDidMount() {
@@ -48,37 +49,24 @@ class Home extends Component {
       this.setState({
         questions: data.questions,
         currentQuestion: data.currentQuestion,
+      });
+    });
+    channel.bind("answer", (data) => {
+      this.setState({
         users: data.users,
       });
     });
-    // this.handleTextChange = this.handleTextChange.bind(this);
   }
-
-  // handleTextChange(e) {
-  //   if (e.keyCode === 13) {
-  //     const payload = {
-  //       username: this.state.username,
-  //       message: this.state.text,
-  //     };
-  //     axios.post(process.env.REACT_APP_BE_URL, payload);
-  //   } else {
-  //     this.setState({ text: e.target.value });
-  //   }
-  // }
 
   handleSubmit = async (e) => {
     e.preventDefault();
+    this.setState({ loading: true });
     const questions = await getQuestions(
       this.state.parameter.noOfQues,
       this.state.parameter.category,
       this.state.parameter.difficulty
     );
-    this.setState({ questions: questions.results });
-    // const payload = {
-    //   questions: questions.results,
-    // };
-    // console.log(process.env.REACT_APP_BE_URL);
-    // axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
+    this.setState({ questions: questions.results, loading: false });
   };
 
   inputOnChange = (e) => {
@@ -113,9 +101,7 @@ class Home extends Component {
       const payload = {
         questions: this.state.questions,
         currentQuestion: question,
-        users: [],
       };
-      //console.log(process.env.REACT_APP_BE_URL);
       axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
     } else {
       alert("NO QUESTIONS SELECTED");
@@ -140,31 +126,58 @@ class Home extends Component {
     const payload = {
       questions: this.state.questions,
       currentQuestion: question,
-      users: [],
     };
-    //console.log(process.env.REACT_APP_BE_URL);
+
     axios.post(`${process.env.REACT_APP_BE_URL}/questions`, payload);
   };
 
   handleSubmitAnswer = (e) => {
-    console.log(e.target.id);
-    const pusher = new Pusher("8e89aecbbecc93a64a18", {
-      cluster: "eu",
-      encrypted: true,
-    });
-    const channel = pusher.subscribe("chat");
-    channel.bind("answer", (data) => {
-      this.setState({
-        users: data.users,
-      });
-    });
-    let user = { user: this.state.username, answer: e.target.id };
-    let newUsers = this.state.users.push(user);
+    this.setState({ answered: "none", scores: "block" });
+    let user = {};
+    let currentUser = this.state.users.find(
+      (user) => user.user === this.state.username
+    );
+    if (currentUser !== undefined) {
+      user = currentUser;
+      user.answer = e.target.id;
+      //CALCULATE SCORE
+      if (user.answer === this.state.currentQuestion.correct_answer) {
+        user.score += 100;
+      }
+
+      let newUsers = this.state.users.filter(
+        (user) => user.user !== this.state.username
+      );
+      newUsers.push(user);
+      this.setState({ users: newUsers });
+    } else {
+      let answer = e.target.id;
+      //CALCULATE SCORE
+      let score = 0;
+      if (answer === this.state.currentQuestion.correct_answer) {
+        score = 100;
+      }
+      user = { user: this.state.username, answer: e.target.id, score: score };
+      this.state.users.push(user);
+    }
+
+    let newUsers = this.state.users;
     this.setState({ users: newUsers });
     const payload = {
       users: newUsers,
     };
     axios.post(`${process.env.REACT_APP_BE_URL}/user`, payload);
+  };
+
+  componentDidUpdate = (prevProp, prevState) => {
+    if (this.state.currentQuestion !== prevState.currentQuestion) {
+      if (this.state.answered === "none") {
+        this.setState({ answered: "block" });
+      }
+      if (this.state.scores === "block") {
+        this.setState({ scores: "none" });
+      }
+    }
   };
 
   render() {
@@ -231,9 +244,15 @@ class Home extends Component {
                   </Form.Control>
                 </Form.Group>
                 <Button type="submit">Get Questions</Button>
-                <Button className="ml-3" onClick={this.handleStart}>
-                  Start Quiz
-                </Button>
+                {this.state.loading ? (
+                  <Spinner animation="border" role="status">
+                    <span className="sr-only">Loading...</span>
+                  </Spinner>
+                ) : (
+                  <Button className="ml-3" onClick={this.handleStart}>
+                    Start Quiz
+                  </Button>
+                )}
               </Form>
             ) : (
               <h1>Wait for admin to start quiz</h1>
@@ -241,7 +260,7 @@ class Home extends Component {
           </>
         ) : (
           <>
-            <h2>STARTED</h2>
+            <h2>TRIVIA</h2>
             <Card>
               <Card.Header as="h5">
                 {this.state.currentQuestion.question.replace(
@@ -251,7 +270,7 @@ class Home extends Component {
               </Card.Header>
               <Card.Body>
                 <Card.Text>
-                  <ListGroup>
+                  <ListGroup style={{ display: this.state.answered }}>
                     {this.state.currentQuestion.answers.map((answer, index) => (
                       <ListGroup.Item
                         key={index}
@@ -268,12 +287,24 @@ class Home extends Component {
                   </ListGroup>
                 </Card.Text>
                 {this.state.username === "admin" && (
-                  <Button variant="primary" onClick={this.handleNext}>
-                    Next
-                  </Button>
+                  <>
+                    <Button variant="primary" onClick={this.handleNext}>
+                      Next
+                    </Button>
+                  </>
                 )}
               </Card.Body>
             </Card>
+            <ListGroup style={{ display: this.state.scores }}>
+              <ListGroup.Item>
+                Correct Answer: {this.state.currentQuestion.correct_answer}
+              </ListGroup.Item>
+              {this.state.users.map((user) => (
+                <ListGroup.Item>
+                  {user.user} answered {user.answer}: {user.score}
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
           </>
         )}
 
