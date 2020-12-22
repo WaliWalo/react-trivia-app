@@ -10,6 +10,8 @@ const entities = {
   "&quot;": '"',
   "&shy;": "",
   "&rsquo;": "",
+  "&iacute": "í",
+  "&aacute;": "a",
   // add more if needed
 };
 
@@ -35,6 +37,7 @@ class Home extends Component {
     scores: "none",
     counter: 0,
     loading: true,
+    completed: false,
   };
 
   componentDidMount() {
@@ -109,10 +112,19 @@ class Home extends Component {
   };
 
   handleNext = () => {
-    if (this.state.counter + 1 === this.state.questions.length) {
+    if (
+      this.state.questions[this.state.questions.length - 1].question ===
+      this.state.currentQuestion.question
+    ) {
       let counter = this.state.counter + 1;
-      this.setState({ counter: counter });
+      this.setState({ counter: counter, completed: true });
     } else {
+      // if (
+      //   this.state.questions[this.state.questions.length - 1].question ===
+      //   this.state.currentQuestion.question
+      // ) {
+      //   this.setState({ completed: true });
+      // }
       let questions = [...this.state.questions];
       let question = { ...questions[this.state.counter + 1] };
       let answers = [...question.incorrect_answers];
@@ -172,11 +184,31 @@ class Home extends Component {
       users: newUsers,
     };
     axios.post(`${process.env.REACT_APP_BE_URL}/user`, payload);
+
+    if (
+      this.state.questions[this.state.questions.length - 1].question ===
+      this.state.currentQuestion.question
+    ) {
+      console.log("unsorted", this.state.users);
+      const usersTemp = this.state.users.sort((a, b) =>
+        a.score > b.score ? 1 : -1
+      );
+
+      this.setState({ completed: true, users: usersTemp }, () =>
+        console.log("SORTED", usersTemp)
+      );
+    }
   };
 
   componentDidUpdate = (prevProp, prevState) => {
     if (this.state.currentQuestion !== prevState.currentQuestion) {
-      this.state.users.sort((a, b) => (a.score > b.score ? 1 : -1));
+      console.log("unsorted", this.state.users);
+      const usersTemp = this.state.users.sort((a, b) =>
+        a.score > b.score ? 1 : -1
+      );
+      this.setState({ users: usersTemp }, () =>
+        console.log("SORTED", usersTemp)
+      );
       if (this.state.answered === "none") {
         this.setState({ answered: "block" });
       }
@@ -189,8 +221,7 @@ class Home extends Component {
   render() {
     return (
       <>
-        {this.state.counter + 1 > this.state.questions.length &&
-        this.state.questions.length !== 0 ? (
+        {this.state.completed === true ? (
           <>
             <h2>{this.state.questions.length} Quiz Completed</h2>
             <ListGroup>
@@ -331,7 +362,7 @@ class Home extends Component {
                       (match) => entities[match]
                     )}
                   </ListGroup.Item>
-                  {this.state.users.reverse().map((user) => (
+                  {this.state.users.map((user) => (
                     <ListGroup.Item>
                       {user.user} answered{" "}
                       {user.answer.replace(
