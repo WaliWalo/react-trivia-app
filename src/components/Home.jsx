@@ -187,6 +187,13 @@ class Home extends Component {
         {this.state.counter + 1 === this.state.questions.length ? (
           <>
             <h2>{this.state.questions.length + 1} Quiz Completed</h2>
+            <ListGroup>
+              {this.state.users.map((user) => (
+                <ListGroup.Item>
+                  {user.user}: {user.score}
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
           </>
         ) : (
           <div>
