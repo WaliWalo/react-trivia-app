@@ -183,7 +183,7 @@ class Home extends Component {
   render() {
     return (
       <>
-        {this.state.counter === this.state.questions.length ? (
+        {this.state.counter + 1 === this.state.questions.length ? (
           <>
             <h2>{this.state.questions.length + 1} Quiz Completed</h2>
             <ListGroup>
