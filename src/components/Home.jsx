@@ -39,7 +39,6 @@ class Home extends Component {
   componentDidMount() {
     const username = window.prompt("Username: ", "Anonymous");
     this.setState({ username });
-    console.log(process.env.REACT_APP_PUSHER_API_KEY);
     const pusher = new Pusher(process.env.REACT_APP_PUSHER_API_KEY, {
       cluster: "eu",
       encrypted: true,
@@ -184,7 +183,7 @@ class Home extends Component {
   render() {
     return (
       <>
-        {this.state.counter + 1 === this.state.questions.length ? (
+        {this.state.counter + 1 > this.state.questions.length ? (
           <>
             <h2>{this.state.questions.length + 1} Quiz Completed</h2>
             <ListGroup>
@@ -321,7 +320,7 @@ class Home extends Component {
                   <ListGroup.Item>
                     Correct Answer: {this.state.currentQuestion.correct_answer}
                   </ListGroup.Item>
-                  {this.state.users.map((user) => (
+                  {this.state.users.reverse().map((user) => (
                     <ListGroup.Item>
                       {user.user} answered {user.answer}: {user.score}
                     </ListGroup.Item>
