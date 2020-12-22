@@ -2,7 +2,7 @@
   "name": "trivia-app",
   "version": "0.1.0",
   "private": true,
-  "homepage": "http://WaliWalo.github.io/react-trivia-app",
+  "homepage": "https://trivia-app-fe.herokuapp.com/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.6",
     "@testing-library/react": "^11.2.2",
